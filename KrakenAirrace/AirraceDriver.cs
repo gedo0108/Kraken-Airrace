@@ -26,32 +26,39 @@ namespace KrakenAirrace
         // Controller for the race
         public Controller controller;
 
+        public PartSelector next;
+        public PartSelector done;
+
         // Adds the controler module
         void Start()
         {
             Vessel v = GetComponent<Vessel>();
-            controller = v.rootPart.AddModule(typeof(Controller).Name) as Controller;
+            controller = (Controller)v.rootPart.AddModule(typeof(Controller).Name);
+            controller.driver = this;
         }
 
         // Gets called when someone passes a target
         public void Trigger(AirraceTargetModule target)
         {
-            if (target.order == race.position && race.targets.Contains(target))
+            if (target.order == race?.position && race.targets.Contains(target))
             {
-                race.position = target.order;
-                StartCoroutine(StopHighlight(target.part));
+                race.position++;
+                DestroyImmediate(next);
+                PartSelector.Create(target.part, p => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen);
                 if (target.modus == "Start")
                 {
                     raceStart = DateTime.Now;
                     isRacing = true;
-                    race.targets[target.order].part.SetHighlightColor(new Color32(122, 122, 178, 178));
-                    race.targets[target.order].part.SetHighlight(true, true);
+                    next = PartSelector.Create(race.targets[(Int32)target.order].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                 }
                 else if (target.modus == "Ziel")
                 {
                     race.time = DateTime.Now - raceStart;
                     isRacing = false;
                     isEnabled = false;
+                    Vessel v = GetComponent<Vessel>();
+                    foreach (Part p in v.parts)
+                        PartSelector.Create(p, pa => { }, XKCDColors.LightGold, XKCDColors.LightGold);
                 }
                 else if (target.modus == "Start+Ziel")
                 {
@@ -60,32 +67,25 @@ namespace KrakenAirrace
                         race.time = DateTime.Now - raceStart;
                         isRacing = false;
                         isEnabled = false;
+                        Vessel v = GetComponent<Vessel>();
+                        foreach (Part p in v.parts)
+                            PartSelector.Create(p, pa => { }, XKCDColors.LightGold, XKCDColors.LightGold);
                     }
                     else
                     {
                         race.rounds++;
                         race.position = 1;
-                        race.targets[0].part.SetHighlightColor(new Color32(122, 122, 178, 178));
-                        race.targets[0].part.SetHighlight(true, true);
+                        next = PartSelector.Create(race.targets[0].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                     }
                 }
             }
-        }
-
-        private IEnumerator StopHighlight(Part part)
-        {
-            part.SetHighlight(false, false);
-            part.SetHighlightColor(new Color32(122, 178, 122, 178));
-            part.SetHighlight(true, true);
-            yield return new WaitForSeconds(5f);
-            part.SetHighlight(false, false);
         }
 
         // Interface for the vessel while 
         public class Controller : PartModule
         {
             [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Zeit")]
-            public String timePassed;
+            public String timePassed = "00:00:00";
 
             // The driver
             public AirraceDriver driver;
@@ -94,7 +94,8 @@ namespace KrakenAirrace
             private void Enable()
             {
                 driver.isEnabled = !driver.isEnabled;
-                Events["Enable"].guiName = driver.isEnabled ? "Start" : "Stop";
+                Events["Enable"].guiName = !driver.isEnabled ? "Start" : "Stop";
+                Fields["timePassed"].guiActive = driver.isEnabled;
 
                 // Create the Race
                 if (driver.isEnabled)
@@ -107,8 +108,8 @@ namespace KrakenAirrace
                         targets = FlightGlobals.Vessels.SelectMany(v => v.FindPartModulesImplementing<AirraceTargetModule>()).OrderBy(m => m.order).ToList()
                     };
                     driver.race = race;
-                    race.targets[0].part.SetHighlightColor(new Color32(122, 122, 178, 178));
-                    race.targets[0].part.SetHighlight(true, true);
+                    Debug.Log(driver.race);
+                    driver.next = PartSelector.Create(race.targets[0].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                 }
                 else
                 {
