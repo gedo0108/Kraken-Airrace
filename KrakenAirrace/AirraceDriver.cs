@@ -57,7 +57,7 @@ namespace KrakenAirrace
                 {
                     race.time = DateTime.Now - raceStart;
                     isRacing = false;
-                    isEnabled = false;
+                    controller.Enable();
                     Vessel v = GetComponent<Vessel>();
                     foreach (Part p in v.parts)
                         all.Add(PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
@@ -68,7 +68,7 @@ namespace KrakenAirrace
                     {
                         race.time = DateTime.Now - raceStart;
                         isRacing = false;
-                        isEnabled = false;
+                        controller.Enable();
                         Vessel v = GetComponent<Vessel>();
                         foreach (Part p in v.parts)
                             all.Add(PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
@@ -93,7 +93,7 @@ namespace KrakenAirrace
             public AirraceDriver driver;
 
             [KSPEvent(guiActive = true, active = true, guiActiveEditor = false, guiActiveUncommand = false, guiActiveUnfocused = false, guiName = "Start")]
-            private void Enable()
+            public void Enable()
             {
                 driver.isEnabled = !driver.isEnabled;
                 Events["Enable"].guiName = !driver.isEnabled ? "Start" : "Stop";
@@ -118,6 +118,7 @@ namespace KrakenAirrace
                     foreach (PartSelector s in driver.all)
                         s.Dismiss();
                     driver.all.Clear();
+                    timePassed = "00:00:00";
                 }
 
             }
