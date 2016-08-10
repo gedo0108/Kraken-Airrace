@@ -29,8 +29,12 @@ namespace KrakenAirrace
         public override void OnStart(StartState state)
         {
             driver = FlightGlobals.ActiveVessel.vesselModules.FirstOrDefault(m => m.GetType() == typeof(AirraceDriver)) as AirraceDriver;
+#if DEBUG
+            Transform trigger = part.partTransform;
+#else
             Transform trigger = part.FindModelTransform(triggerTransform);
-            trigger.gameObject.AddComponent<AirraceTrigger>().callback = collider => { driver.Trigger(this); };
+#endif
+            trigger.gameObject.AddOrGetComponent<AirraceTrigger>().callback = collider => { driver.Trigger(this); };
         }
 
         public override void OnUpdate()

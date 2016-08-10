@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Policy;
 using UnityEngine;
@@ -28,6 +29,7 @@ namespace KrakenAirrace
 
         public PartSelector next;
         public PartSelector done;
+        public List<PartSelector> all = new List<PartSelector>();
 
         // Adds the controler module
         void Start()
@@ -44,7 +46,7 @@ namespace KrakenAirrace
             {
                 race.position++;
                 DestroyImmediate(next);
-                PartSelector.Create(target.part, p => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen);
+                all.Add(PartSelector.Create(target.part, p => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
                 if (target.modus == "Start")
                 {
                     raceStart = DateTime.Now;
@@ -58,7 +60,7 @@ namespace KrakenAirrace
                     isEnabled = false;
                     Vessel v = GetComponent<Vessel>();
                     foreach (Part p in v.parts)
-                        PartSelector.Create(p, pa => { }, XKCDColors.LightGold, XKCDColors.LightGold);
+                        all.Add(PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
                 }
                 else if (target.modus == "Start+Ziel")
                 {
@@ -69,7 +71,7 @@ namespace KrakenAirrace
                         isEnabled = false;
                         Vessel v = GetComponent<Vessel>();
                         foreach (Part p in v.parts)
-                            PartSelector.Create(p, pa => { }, XKCDColors.LightGold, XKCDColors.LightGold);
+                            all.Add(PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
                     }
                     else
                     {
@@ -108,12 +110,14 @@ namespace KrakenAirrace
                         targets = FlightGlobals.Vessels.SelectMany(v => v.FindPartModulesImplementing<AirraceTargetModule>()).OrderBy(m => m.order).ToList()
                     };
                     driver.race = race;
-                    Debug.Log(driver.race);
                     driver.next = PartSelector.Create(race.targets[0].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                 }
                 else
                 {
                     driver.race = null;
+                    foreach (PartSelector s in driver.all)
+                        s.Dismiss();
+                    driver.all.Clear();
                 }
 
             }
