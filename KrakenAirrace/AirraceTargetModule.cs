@@ -35,6 +35,7 @@ namespace KrakenAirrace
             Transform trigger = part.FindModelTransform(triggerTransform);
 #endif
             trigger.gameObject.AddOrGetComponent<AirraceTrigger>().callback = collider => { driver.Trigger(this); };
+            trigger.gameObject.GetComponent<Collider>().isTrigger = true;
         }
 
         public override void OnUpdate()

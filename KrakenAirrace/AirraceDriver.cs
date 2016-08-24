@@ -21,9 +21,6 @@ namespace KrakenAirrace
         // The current airrace
         public Airrace race;
 
-        // Whether the UI is enabled
-        public Boolean showUI;
-
         // Controller for the race
         public Controller controller;
 
@@ -121,13 +118,6 @@ namespace KrakenAirrace
                     timePassed = "00:00:00";
                 }
 
-            }
-
-            [KSPEvent(guiActive = true, active = true, guiActiveEditor = false, guiActiveUncommand = false, guiActiveUnfocused = false, guiName = "UI zeigen")]
-            private void UI()
-            {
-                driver.showUI = !driver.showUI;
-                Events["UI"].guiName = !driver.showUI ? "UI zeigen" : "UI verstecken";
             }
 
             public override void OnUpdate()
