@@ -16,7 +16,7 @@ namespace KrakenAirrace
         public Boolean isEnabled;
 
         // Time when the race has started
-        public DateTime raceStart;
+        public Double raceStart;
 
         // The current airrace
         public Airrace race;
@@ -26,7 +26,7 @@ namespace KrakenAirrace
 
         public PartSelector next;
         public PartSelector done;
-        public List<PartSelector> all = new List<PartSelector>();
+        public Dictionary<Part, PartSelector> all = new Dictionary<Part, PartSelector>();
 
         // Adds the controler module
         void Start()
@@ -42,40 +42,54 @@ namespace KrakenAirrace
             if (target.order == race?.position && race.targets.Contains(target))
             {
                 race.position++;
-                DestroyImmediate(next);
-                all.Add(PartSelector.Create(target.part, p => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
+                next.Dismiss();
+                if (race.targets.Count != (Int32) target.order && all.ContainsKey(race.targets[(Int32) target.order].part))
+                {
+                    all[race.targets[(Int32) target.order].part].Dismiss();
+                    all.Remove(race.targets[(Int32) target.order].part);
+                }
+                all.Add(target.part, PartSelector.Create(target.part, p => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
                 if (target.modus == "Start")
                 {
-                    raceStart = DateTime.Now;
+                    raceStart = Planetarium.GetUniversalTime();
                     isRacing = true;
-                    next = PartSelector.Create(race.targets[(Int32)target.order].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
+                    next = PartSelector.Create(race.targets[(Int32) target.order].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                 }
                 else if (target.modus == "Ziel")
                 {
-                    race.time = DateTime.Now - raceStart;
+                    race.time = TimeSpan.FromSeconds(Planetarium.GetUniversalTime() - raceStart);
                     isRacing = false;
-                    controller.Enable();
                     Vessel v = GetComponent<Vessel>();
                     foreach (Part p in v.parts)
-                        all.Add(PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
+                        all.Add(p, PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
                 }
                 else if (target.modus == "Start+Ziel")
                 {
                     if (target.rounds == race.rounds)
                     {
-                        race.time = DateTime.Now - raceStart;
+                        race.time = TimeSpan.FromSeconds(Planetarium.GetUniversalTime() - raceStart);
                         isRacing = false;
-                        controller.Enable();
                         Vessel v = GetComponent<Vessel>();
                         foreach (Part p in v.parts)
-                            all.Add(PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
+                            all.Add(p, PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
                     }
                     else
                     {
+                        if (race.rounds == 0)
+                        {
+                            raceStart = Planetarium.GetUniversalTime();
+                            isRacing = true;
+                        }
                         race.rounds++;
-                        race.position = 1;
-                        next = PartSelector.Create(race.targets[0].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
+                        next = PartSelector.Create(race.targets[(Int32) target.order].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                     }
+                }
+                else if (race.targets.Count == (Int32) target.order && race.targets[0].modus == "Start+Ziel")
+                {
+                    all[race.targets[0].part].Dismiss();
+                    all.Remove(race.targets[0].part);
+                    next = PartSelector.Create(race.targets[0].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
+                    race.position = 1;
                 }
             }
         }
@@ -103,7 +117,7 @@ namespace KrakenAirrace
                     {
                         amount = FlightGlobals.Vessels.Count(v => v.FindPartModulesImplementing<AirraceTargetModule>().Count != 0),
                         position = 1,
-                        rounds = 1,
+                        rounds = 0,
                         targets = FlightGlobals.Vessels.SelectMany(v => v.FindPartModulesImplementing<AirraceTargetModule>()).OrderBy(m => m.order).ToList()
                     };
                     driver.race = race;
@@ -112,7 +126,7 @@ namespace KrakenAirrace
                 else
                 {
                     driver.race = null;
-                    foreach (PartSelector s in driver.all)
+                    foreach (PartSelector s in driver.all.Values)
                         s.Dismiss();
                     driver.all.Clear();
                     timePassed = "00:00:00";
@@ -123,7 +137,7 @@ namespace KrakenAirrace
             public override void OnUpdate()
             {
                 if (!driver.isRacing) return;
-                TimeSpan time = (DateTime.Now - driver.raceStart);
+                TimeSpan time = TimeSpan.FromSeconds(Planetarium.GetUniversalTime() - driver.raceStart);
                 timePassed = $"{(int) time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}";
             }
         }

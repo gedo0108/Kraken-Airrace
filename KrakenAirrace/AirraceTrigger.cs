@@ -21,7 +21,8 @@ namespace KrakenAirrace
         // Gets called when something enters the 
         void OnTriggerEnter(Collider other)
         {
-            callback?.Invoke(other);
+            if (Part.GetComponentUpwards<Part>(other.gameObject))
+                callback?.Invoke(other);
         }
 #endif
     }
