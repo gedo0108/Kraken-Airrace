@@ -91,6 +91,10 @@ namespace KrakenAirrace
                     next = PartSelector.Create(race.targets[0].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                     race.position = 1;
                 }
+                else
+                {
+                    next = PartSelector.Create(race.targets[(Int32)target.order].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
+                }
             }
         }
 
