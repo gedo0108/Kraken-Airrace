@@ -102,7 +102,7 @@ namespace KrakenAirrace
         public class Controller : PartModule
         {
             [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Zeit")]
-            public String timePassed = "00:00:00";
+            public String timePassed = "00:00:0000";
 
             // The driver
             public AirraceDriver driver;
@@ -133,7 +133,7 @@ namespace KrakenAirrace
                     foreach (PartSelector s in driver.all.Values)
                         s.Dismiss();
                     driver.all.Clear();
-                    timePassed = "00:00:00";
+                    timePassed = "00:00:0000";
                 }
 
             }
@@ -142,7 +142,7 @@ namespace KrakenAirrace
             {
                 if (!driver.isRacing) return;
                 TimeSpan time = TimeSpan.FromSeconds(Planetarium.GetUniversalTime() - driver.raceStart);
-                timePassed = $"{(int) time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}";
+                timePassed = $"{time.Minutes:00}:{time.Seconds:00}:{time.Milliseconds:0000}";
             }
         }
     }
