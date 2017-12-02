@@ -29,9 +29,8 @@ namespace KrakenAirrace
         public Dictionary<Part, PartSelector> all = new Dictionary<Part, PartSelector>();
 
         // Adds the controler module
-        protected override void OnStart()
+        public override void OnLoadVessel()
         {
-            base.OnStart();
             controller = (Controller)Vessel.rootPart.AddModule(typeof(Controller).Name);
             controller.driver = this;
         }
