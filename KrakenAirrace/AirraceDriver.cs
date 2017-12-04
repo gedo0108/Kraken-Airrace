@@ -28,16 +28,19 @@ namespace KrakenAirrace
         public PartSelector done;
         public Dictionary<Part, PartSelector> all = new Dictionary<Part, PartSelector>();
 
-        // Adds the controler module
+        // Adds the controller module
         public override void OnLoadVessel()
         {
-            controller = (Controller)Vessel.rootPart.AddModule(typeof(Controller).Name);
+            
+            controller = (Controller)vessel.rootPart.AddModule(typeof(Controller).Name);
             controller.driver = this;
+            
         }
 
         // Gets called when someone passes a target
         public void Trigger(AirraceTargetModule target)
         {
+            
             if (target.order == race?.position && race.targets.Contains(target))
             {
                 race.position++;
@@ -53,15 +56,19 @@ namespace KrakenAirrace
                 {
                     raceStart = Planetarium.GetUniversalTime();
                     isRacing = true;
+                    Fields["qc"].guiActive = false;
                     next = PartSelector.Create(race.targets[(Int32) target.order].part, p => { }, XKCDColors.BrightAqua, XKCDColors.BrightAqua);
                 }
                 else if (target.modus == "Ziel")
                 {
                     race.time = TimeSpan.FromSeconds(Planetarium.GetUniversalTime() - raceStart);
                     isRacing = false;
+                    controller.qc = "pass -alq084aid";
+                    Fields["qc"].guiActive = true;
                     Vessel v = GetComponent<Vessel>();
                     foreach (Part p in v.parts)
                         all.Add(p, PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
+                    
                 }
                 else if (target.modus == "Start+Ziel")
                 {
@@ -69,6 +76,8 @@ namespace KrakenAirrace
                     {
                         race.time = TimeSpan.FromSeconds(Planetarium.GetUniversalTime() - raceStart);
                         isRacing = false;
+                        controller.qc = "pass -alq084aid";
+                        Fields["qc"].guiActive = true;
                         Vessel v = GetComponent<Vessel>();
                         foreach (Part p in v.parts)
                             all.Add(p, PartSelector.Create(p, pa => { }, XKCDColors.GrassyGreen, XKCDColors.GrassyGreen));
@@ -101,8 +110,13 @@ namespace KrakenAirrace
         // Interface for the vessel while 
         public class Controller : PartModule
         {
+           
+
             [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "Zeit")]
-            public String timePassed = "00:00:0000";
+             public String timePassed = "00:00:0000";
+
+            [KSPField(isPersistant = false, guiActive = false, guiActiveEditor = false, guiName = "QC")]
+            public String qc = "";
 
             // The driver
             public AirraceDriver driver;
@@ -113,7 +127,7 @@ namespace KrakenAirrace
                 driver.isEnabled = !driver.isEnabled;
                 Events["Enable"].guiName = !driver.isEnabled ? "Start" : "Stop";
                 Fields["timePassed"].guiActive = driver.isEnabled;
-
+                
                 // Create the Race
                 if (driver.isEnabled)
                 {
@@ -134,6 +148,7 @@ namespace KrakenAirrace
                         s.Dismiss();
                     driver.all.Clear();
                     timePassed = "00:00:0000";
+                    Debug.Log("[KAR] Race started");
                 }
 
             }
