@@ -20,5 +20,9 @@ namespace KrakenAirrace
 
         // The time needed to fly the race
         public TimeSpan time;
+
+
+
+
     }
 }
